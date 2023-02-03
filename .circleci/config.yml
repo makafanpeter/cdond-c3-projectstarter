@@ -55,7 +55,7 @@ commands:
   revert-migrations:
     description: Revert the last migration
     parameters:
-      workflow_id:
+      WORKFLOW_ID:
         type: string
         default: ${CIRCLE_WORKFLOW_ID:0:7} # first 8 char of workflow id
     steps:
