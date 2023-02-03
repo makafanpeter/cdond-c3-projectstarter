@@ -36,8 +36,6 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
 
-
-
   test-frontend:
     docker:
       # Docker image here
@@ -73,42 +71,6 @@ jobs:
             cd backend
             npm install
             npm run test
-  test-frontend:
-    docker:
-      # Docker image here
-      - image: cimg/node:13.8.0
-    steps:
-      # Checkout code from git
-       - checkout
-      # Restore from cache
-       - restore_cache:
-          keys: [frontend-build]
-      # Your job code here
-       - run:
-          name: test front-end
-          command: |
-            cd frontend
-            npm install
-            npm run test
-
-  test-backend:
-    docker:
-      # Docker image here
-      - image: cimg/node:13.8.0
-    steps:
-      # Checkout code from git
-       - checkout
-      # Restore from cache
-       - restore_cache:
-          keys: [backend-build]
-      # Your job code here
-       - run:
-          name: test back-end
-          command: |
-            cd backend
-            npm install
-            npm run test
-
 
   scan-frontend:
     docker:
@@ -129,6 +91,24 @@ jobs:
             # If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
             # npm audit --audit-level=critical
 
+  scan-backend:
+    docker:
+      # Docker image here
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          keys: [backend-build]
+      # Your job code here
+      - run:
+          name: scan backend
+          command: |
+            cd backend
+            npm install
+            npm audit fix --audit-level=critical --force
+            # If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
+            #npm audit --audit-level=critical
 
 workflows:
   default:
