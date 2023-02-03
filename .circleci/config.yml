@@ -1,5 +1,86 @@
 version: 2.1
 
+commands:
+
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    parameters:
+      # Add parameter here
+      WORKFLOW_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7} # first 8 char of workflow id
+    steps:
+      - run:
+          name: Destroy cloud formation stacks
+          when: on_fail
+          command: |
+            # Your code here
+            if aws cloudformation wait stack-exists --stack-name udapeople-frontend-<< parameters.WORKFLOW_ID >>
+            then
+              aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.WORKFLOW_ID >>
+            fi
+            if aws cloudformation wait stack-exists --stack-name udapeople-backend-<< parameters.WORKFLOW_ID >>
+            then
+              aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.WORKFLOW_ID >>
+            fi
+      - run:
+          name: Destroy s3 Buckect
+          when: on_fail
+          command: |
+            # Your code here
+            if aws s3api head-bucket --bucket udapeople-<<parameters.WORKFLOW_ID>>
+            then
+              aws s3 rm s3://udapeople-<<parameters.WORKFLOW_ID>> --recursive
+            fi
+
+  install_ansible:
+    steps:
+      - run:
+          name: Intall ansible
+          command: |
+            sudo apt update -y
+            sudo apt install ansible -y
+
+
+  install_aws_cli:
+    steps:
+      - run:
+          name: Intall AWSCLI v2
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+
+
+  revert-migrations:
+    description: Revert the last migration
+    parameters:
+      workflow_id:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7} # first 8 char of workflow id
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            #Using kvdb
+            SUCCESS=$(curl --insecure  https://kvdb.io/FRNWo5FUudmTPykigCbhBi/migration_<< parameters.workflow_id >>)
+            # Logic for reverting the database state
+            if (( $SUCCESS == 1 ));
+            then
+                cd ~/project/backend
+                npm install
+                npm run migration:revert
+            fi
+
+  install_nodejs13:
+    steps:
+      - run:
+          name: install nodejs 13
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash - &&\
+            sudo apt-get install -y nodejs
+
 
 jobs:
   build-frontend:
